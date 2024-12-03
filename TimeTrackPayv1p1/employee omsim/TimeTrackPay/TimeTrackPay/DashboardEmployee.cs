@@ -31,5 +31,28 @@ namespace TimeTrackPay
             Buttons.BackColor = Color.FromArgb(82, 85, 76);
            
         }
+
+        private void btnAttendance_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void btnLeave_Click(object sender, EventArgs e) 
+        {
+            
+        }
+        private void btnPayroll_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void btnProfile_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void btnDashboard_Click(object sender, EventArgs e)
+        {
+
+        }
+
+
     }
 }
