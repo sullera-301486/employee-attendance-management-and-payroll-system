@@ -329,7 +329,7 @@ BEGIN
     SET @PayPeriod = FORMAT(GETDATE(), 'yyyy-MM');
 
     INSERT INTO Payroll (PayrollId, EmployeeID, AdminID, EmployeeSalary, AdminSalary, Deduction, NetPay, PayPeriod)
-    VALUES (NEWID(), @EmployeeID, @AdminID, @EmployeeSalary, NULL, @TotalDeduction, @NetPay, @PayPeriod);
+    VALUES (NEWID(), @EmployeeID, NULL, @EmployeeSalary, NULL, @TotalDeduction, @NetPay, @PayPeriod);
 
     SELECT @GrossPay AS GrossPay,
            @SSSDeduction AS SSSDeduction,
