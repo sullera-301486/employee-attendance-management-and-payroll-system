@@ -1,0 +1,229 @@
+use dbEmployee;
+
+CREATE TABLE Employee (
+    EmployeeID Varchar(50) PRIMARY KEY,
+    Position VARCHAR(50),
+	FullName VARCHAR(50),
+    Salary DECIMAL(18, 2),
+    EmployeePassword NVARCHAR(256)
+);
+
+CREATE TABLE Admin (
+    AdminID Varchar(50) PRIMARY KEY,
+    Position VARCHAR(50),
+	FullName VARCHAR(50),
+    Salary DECIMAL(18, 2),
+    AdminPassword NVARCHAR(256)
+);
+
+CREATE TABLE Attendance (
+    AttendanceID Varchar(50) PRIMARY KEY,
+    EmployeeID Varchar(50),
+    AdminID Varchar(50),
+    TimeIN TIME,
+    TimeOut TIME,
+    Status VARCHAR(50),
+    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID),
+    FOREIGN KEY (AdminID) REFERENCES Admin(AdminID)
+);
+
+CREATE TABLE Payroll (
+    PayrollId Varchar(50) PRIMARY KEY, 
+    EmployeeID Varchar(50),
+    AdminID Varchar(50),
+    TotalDaysWorked INT,
+    GrossPay DECIMAL(18, 2),
+    Deduction DECIMAL(18, 2),
+    TotalPay DECIMAL(18, 2),
+    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID),
+    FOREIGN KEY (AdminID) REFERENCES Admin(AdminID)
+);
+
+INSERT INTO Employee (EmployeeId, Position, FullName, Salary, EmployeePassword) VALUES (5, 'CEO', 'FRANZ LOUIES', 50000, 'FRANZ');
+INSERT INTO Employee (EmployeeId, Position, FullName, Salary, EmployeePassword) VALUES (24, 'Developer', 'Karl Fabon', 50000, 'FABON');
+INSERT INTO Admin (AdminID, Position, FullName, Salary, AdminPassword) VALUES (100, 'CEO', 'FRANZ LOUIES', 50000, 'admin');
+
+
+CREATE PROCEDURE AddAdmin
+	@FullName VARCHAR(50),
+    @Position VARCHAR(50),
+    @Salary DECIMAL(18, 2),
+    @Password VARCHAR(50)
+AS
+BEGIN
+
+    DECLARE @HashedPassword NVARCHAR(256);
+
+    SET @HashedPassword = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @Password)), 2);
+
+    INSERT INTO Admin (FullName, Position, Salary, AdminPassword)
+    VALUES (@FullName, @Position, @Salary, @HashedPassword);
+
+    SELECT SCOPE_IDENTITY() AS AdminID;
+END;
+
+CREATE PROCEDURE AddEmployee
+    @FullName VARCHAR(50),
+    @Position VARCHAR(50),
+    @Salary DECIMAL(18, 2),
+    @Password VARCHAR(50)
+AS
+BEGIN
+    DECLARE @HashedPassword NVARCHAR(256);
+
+    SET @HashedPassword = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @Password)), 2);
+
+    INSERT INTO Employee (FullName, Position, Salary, EmployeePassword)
+    VALUES (@FullName, @Position, @Salary, @HashedPassword);
+
+    SELECT SCOPE_IDENTITY() AS EmployeeID;
+END;
+
+CREATE PROCEDURE EmployeePayroll
+    @EmployeeID INT,
+    @TotalDaysWorked INT
+AS
+BEGIN
+    DECLARE @Salary DECIMAL(18,2);
+    DECLARE @GrossPay DECIMAL(18,2);
+    DECLARE @TotalPay DECIMAL(18,2);
+    DECLARE @SSSDeduction DECIMAL(18,2);
+    DECLARE @PhilHealthDeduction DECIMAL(18,2);
+    DECLARE @PagIbigDeduction DECIMAL(18,2);
+    DECLARE @TotalDeduction DECIMAL(18,2);
+
+    SELECT @Salary = Salary
+    FROM Employee
+    WHERE EmployeeID = @EmployeeID;
+
+    SET @GrossPay = (@Salary / 30) * @TotalDaysWorked;
+
+    SET @SSSDeduction = @GrossPay * 0.045; 
+    SET @PhilHealthDeduction = @GrossPay * 0.015;  
+    SET @PagIbigDeduction = @GrossPay * 0.004;    
+
+    SET @TotalDeduction = @SSSDeduction + @PhilHealthDeduction + @PagIbigDeduction;
+
+    SET @TotalPay = @GrossPay - @TotalDeduction;
+
+    INSERT INTO Payroll (EmployeeID, TotalDaysWorked, GrossPay, Deduction, TotalPay)
+    VALUES (@EmployeeID, @TotalDaysWorked, @GrossPay, @TotalDeduction, @TotalPay);
+
+    SELECT @SSSDeduction AS SSSDeduction,
+           @PhilHealthDeduction AS PhilHealthDeduction,
+           @PagIbigDeduction AS PagIbigDeduction,
+           @TotalDeduction AS TotalDeduction,
+           @TotalPay AS TotalPay;
+END;
+
+CREATE PROCEDURE AdminPayroll
+    @AdminId INT,
+    @TotalDaysWorked INT
+AS
+BEGIN
+    DECLARE @Salary DECIMAL(18,2);
+    DECLARE @GrossPay DECIMAL(18,2);
+    DECLARE @TotalPay DECIMAL(18,2);
+    DECLARE @SSSDeduction DECIMAL(18,2);
+    DECLARE @PhilHealthDeduction DECIMAL(18,2);
+    DECLARE @PagIbigDeduction DECIMAL(18,2);
+    DECLARE @TotalDeduction DECIMAL(18,2);
+
+    SELECT @Salary = Salary
+    FROM Admin
+    WHERE AdminID = @AdminId;
+
+    SET @GrossPay = (@Salary / 30) * @TotalDaysWorked;
+
+    SET @SSSDeduction = @GrossPay * 0.045;    
+    SET @PhilHealthDeduction = @GrossPay * 0.015;  
+    SET @PagIbigDeduction = @GrossPay * 0.004;    
+
+    SET @TotalDeduction = @SSSDeduction + @PhilHealthDeduction + @PagIbigDeduction;
+
+    SET @TotalPay = @GrossPay - @TotalDeduction;
+
+    INSERT INTO Payroll (AdminID, TotalDaysWorked, GrossPay, Deduction, TotalPay)
+    VALUES (@AdminId, @TotalDaysWorked, @GrossPay, @TotalDeduction, @TotalPay);
+
+    SELECT @SSSDeduction AS SSSDeduction,
+           @PhilHealthDeduction AS PhilHealthDeduction,
+           @PagIbigDeduction AS PagIbigDeduction,
+           @TotalDeduction AS TotalDeduction,
+           @TotalPay AS TotalPay;
+END;
+
+CREATE PROCEDURE VerifyEmployeeLogin
+    @EmployeeID INT,
+    @Password VARCHAR(50)
+AS
+BEGIN
+    DECLARE @StoredPassword NVARCHAR(256);
+    DECLARE @HashedPassword NVARCHAR(256);
+
+    SELECT @StoredPassword = EmployeePassword
+    FROM Employee
+    WHERE EmployeeID = @EmployeeID;
+
+    SET @HashedPassword = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @Password)), 2);
+
+    IF @HashedPassword = @StoredPassword
+    BEGIN
+
+        PRINT 'Login successful.';
+    END
+    ELSE
+    BEGIN
+
+        PRINT 'Invalid password.';
+    END
+END;
+
+
+CREATE PROCEDURE VerifyAdminLogin
+    @AdminID INT,
+    @Password VARCHAR(50)
+AS
+BEGIN
+    DECLARE @StoredPassword NVARCHAR(256);
+    DECLARE @HashedPassword NVARCHAR(256);
+
+    SELECT @StoredPassword = AdminPassword
+    FROM Admin
+    WHERE AdminID = @AdminID;
+
+    SET @HashedPassword = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @Password)), 2);
+
+    IF @HashedPassword = @StoredPassword
+    BEGIN
+        PRINT 'Login successful.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Invalid password.';
+    END
+END;
+<-------------start ng code fabon---------------->
+ALTER TABLE Employee
+ADD phone_number NVARCHAR(15), email NVARCHAR(255), birthdate DATE, address TEXT;
+
+UPDATE Employee
+SET phone_number = '09154375321', email = 'Deloritos@gmail.com', birthdate = '2004-02-29', address = 'Angono'
+WHERE EmployeeID = 5;
+
+UPDATE Employee
+SET phone_number = '09151584452', email = 'Fabon@gmail.com', birthdate = '2003-10-24', address = 'Antipolo'
+WHERE EmployeeID = 24;
+
+SELECT*FROM Employee WHERE EmployeeID = 5;
+
+ALTER TABLE Employee
+ADD worked_for NVARCHAR(15), hire_date DATE;
+
+UPDATE Employee
+SET worked_for ='2 years', hire_date = '2022-01-01'
+WHERE EmployeeID = 5;
+
+UPDATE Employee
+SET worked_for ='1 years', hire_date = '2023-02-02'
+WHERE EmployeeID = 24;
