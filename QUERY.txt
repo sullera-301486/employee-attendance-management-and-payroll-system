@@ -16,6 +16,34 @@ CREATE TABLE Admin (
     AdminPassword NVARCHAR(256)
 );
 
+CREATE TABLE Attendance (
+    AttendanceID Varchar(50) PRIMARY KEY,
+    EmployeeID Varchar(50),
+    AdminID Varchar(50),
+    TimeIN TIME,
+    TimeOut TIME,
+    Status VARCHAR(50),
+    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID),
+    FOREIGN KEY (AdminID) REFERENCES Admin(AdminID)
+);
+
+CREATE TABLE Payroll (
+    PayrollId Varchar(50) PRIMARY KEY, 
+    EmployeeID Varchar(50),
+    AdminID Varchar(50),
+    TotalDaysWorked INT,
+    GrossPay DECIMAL(18, 2),
+    Deduction DECIMAL(18, 2),
+    TotalPay DECIMAL(18, 2),
+    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID),
+    FOREIGN KEY (AdminID) REFERENCES Admin(AdminID)
+);
+
+INSERT INTO Employee (EmployeeId, Position, FullName, Salary, EmployeePassword) VALUES (5, 'CEO', 'FRANZ LOUIES', 50000, 'FRANZ');
+INSERT INTO Employee (EmployeeId, Position, FullName, Salary, EmployeePassword) VALUES (24, 'Developer', 'Karl Fabon', 50000, 'FABON');
+INSERT INTO Admin (AdminID, Position, FullName, Salary, AdminPassword) VALUES (100, 'CEO', 'FRANZ LOUIES', 50000, 'admin');
+
+
 CREATE PROCEDURE AddAdmin
 	@FullName VARCHAR(50),
     @Position VARCHAR(50),
@@ -227,7 +255,7 @@ BEGIN
     SET @PayPeriod = FORMAT(GETDATE(), 'yyyy-MM');
 
     INSERT INTO Payroll (PayrollId, EmployeeID, AdminID, EmployeeSalary, AdminSalary, Deduction, NetPay, PayPeriod)
-    VALUES (NEWID(), @EmployeeID, @AdminID, @EmployeeSalary, NULL, @TotalDeduction, @NetPay, @PayPeriod);
+    VALUES (NEWID(), @EmployeeID, NULL, @EmployeeSalary, NULL, @TotalDeduction, @NetPay, @PayPeriod);
 
     SELECT @GrossPay AS GrossPay,
            @SSSDeduction AS SSSDeduction,
@@ -279,8 +307,7 @@ BEGIN
 END;
 
 -----------------------------------------update Attendance-----------------------------------------
-drop table AttendanceAdmin
-drop table AttendanceEmployee
+drop table Attendance
 
 CREATE TABLE AttendanceAdmin (
     AttendanceID NVarchar(50) PRIMARY KEY,
