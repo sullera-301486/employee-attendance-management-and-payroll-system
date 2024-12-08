@@ -2,7 +2,6 @@ use dbEmployee;
 
 CREATE TABLE Employee (
     EmployeeID Varchar(50) PRIMARY KEY,
-	EmployeePassword NVARCHAR(256),
     Position VARCHAR(50),
 	FullName VARCHAR(50),
     EmployeeSalary DECIMAL(18, 2),
@@ -11,12 +10,12 @@ CREATE TABLE Employee (
 	phone_number NVARCHAR(15), 
 	email NVARCHAR(255), 
 	address TEXT,
-	worked_for nvarchar(50)   
+	worked_for nvarchar(50),
+    EmployeePassword NVARCHAR(256)
 );
 
 CREATE TABLE Admin (
     AdminID Varchar(50) PRIMARY KEY,
-	AdminPassword NVARCHAR(256),
     Position VARCHAR(50),
 	FullName VARCHAR(50),
     AdminSalary DECIMAL(18, 2),
@@ -25,7 +24,8 @@ CREATE TABLE Admin (
 	phone_number NVARCHAR(15), 
 	email NVARCHAR(255), 
 	address TEXT,
-	worked_for nvarchar(50)
+	worked_for nvarchar(50),
+    AdminPassword NVARCHAR(256)
 );
 
 CREATE TABLE AttendanceAdmin (
