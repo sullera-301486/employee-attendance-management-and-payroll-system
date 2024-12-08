@@ -2,30 +2,30 @@ use dbEmployee;
 
 CREATE TABLE Employee (
     EmployeeID Varchar(50) PRIMARY KEY,
-    EmployeePassword NVARCHAR(256),
+	EmployeePassword NVARCHAR(256),
     Position VARCHAR(50),
-    FullName VARCHAR(50),
+	FullName VARCHAR(50),
     EmployeeSalary DECIMAL(18, 2),
-    birthdate nvarchar(15),
-    hire_date nvarchar(15),
-    phone_number NVARCHAR(15), 
-    email NVARCHAR(255), 
-    address TEXT,
-    worked_for nvarchar(50)
+	birthdate nvarchar(15),
+	hire_date nvarchar(15),
+	phone_number NVARCHAR(15), 
+	email NVARCHAR(255), 
+	address TEXT,
+	worked_for nvarchar(50)   
 );
 
 CREATE TABLE Admin (
     AdminID Varchar(50) PRIMARY KEY,
-    AdminPassword NVARCHAR(256),
+	AdminPassword NVARCHAR(256),
     Position VARCHAR(50),
-    FullName VARCHAR(50),
+	FullName VARCHAR(50),
     AdminSalary DECIMAL(18, 2),
-    birthdate nvarchar(15),
-    hire_date nvarchar(15),
-    phone_number NVARCHAR(15), 
-    email NVARCHAR(255), 
-    address TEXT,
-    worked_for nvarchar(50)  
+	birthdate nvarchar(15),
+	hire_date nvarchar(15),
+	phone_number NVARCHAR(15), 
+	email NVARCHAR(255), 
+	address TEXT,
+	worked_for nvarchar(50)
 );
 
 CREATE TABLE AttendanceAdmin (
@@ -41,13 +41,27 @@ CREATE TABLE AttendanceAdmin (
 CREATE TABLE AttendanceEmployee (
     EmployeeID Varchar(50)PRIMARY KEY,
     AdminID Varchar(50),
-    Date date,
+	Date date,
     TimeIN TIME,
     TimeOut TIME,
-    TotalTime Time,
+	TotalTime Time,
     FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID),
 );
 
+CREATE TABLE Payroll (
+    PayrollID INT IDENTITY(1,1) PRIMARY KEY,
+    EmployeeID VARCHAR(50) NULL,
+    AdminID VARCHAR(50) NULL,
+    PayPeriod VARCHAR(7),
+    GrossPay DECIMAL(18, 2),
+    SSSDeduction DECIMAL(18, 2),
+    PhilHealthDeduction DECIMAL(18, 2),
+    PagIbigDeduction DECIMAL(18, 2),
+    TotalDeduction DECIMAL(18, 2),
+    NetPay DECIMAL(18, 2),
+    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID),
+    FOREIGN KEY (AdminID) REFERENCES Admin(AdminID)
+);
 
 Insert into Employee (EmployeeId, Position, FullName, EmployeeSalary, EmployeePassword, phone_number, email, birthdate,  address, hire_date, worked_for) 
 VALUES ('E01', 'Developer', 'Franz Deloritos', 50000, 'Deloritos', '09154375321',  'Deloritos@gmail.com', '2004-02-29','Angono', '2022-01-01', '2 year/s');
@@ -185,6 +199,9 @@ BEGIN
 
     SET @PayPeriod = FORMAT(GETDATE(), 'yyyy-MM');
 
+    INSERT INTO Payroll (EmployeeID, PayPeriod, GrossPay, SSSDeduction, PhilHealthDeduction, PagIbigDeduction, TotalDeduction, NetPay)
+    VALUES (@EmployeeID, @PayPeriod, @GrossPay, @SSSDeduction, @PhilHealthDeduction, @PagIbigDeduction, @TotalDeduction, @NetPay);
+
     SELECT @TotalHoursWorked AS TotalHoursWorked,
            @GrossPay AS GrossPay,
            @SSSDeduction AS SSSDeduction,
@@ -193,6 +210,7 @@ BEGIN
            @TotalDeduction AS TotalDeduction,
            @NetPay AS NetPay;
 END;
+
 
 CREATE PROCEDURE AdminPayroll
     @AdminID VARCHAR(50)
@@ -233,6 +251,9 @@ BEGIN
 
     SET @PayPeriod = FORMAT(GETDATE(), 'yyyy-MM');
 
+    INSERT INTO Payroll (AdminID, PayPeriod, GrossPay, SSSDeduction, PhilHealthDeduction, PagIbigDeduction, TotalDeduction, NetPay)
+    VALUES (@AdminID, @PayPeriod, @GrossPay, @SSSDeduction, @PhilHealthDeduction, @PagIbigDeduction, @TotalDeduction, @NetPay);
+
     SELECT @TotalHoursWorked AS TotalHoursWorked,
            @GrossPay AS GrossPay,
            @SSSDeduction AS SSSDeduction,
@@ -241,4 +262,3 @@ BEGIN
            @TotalDeduction AS TotalDeduction,
            @NetPay AS NetPay;
 END;
-
