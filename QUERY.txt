@@ -1,0 +1,244 @@
+use dbEmployee;
+
+CREATE TABLE Employee (
+    EmployeeID Varchar(50) PRIMARY KEY,
+    Position VARCHAR(50),
+	FullName VARCHAR(50),
+    EmployeeSalary DECIMAL(18, 2),
+	birthdate nvarchar(15),
+	hire_date nvarchar(15),
+	phone_number NVARCHAR(15), 
+	email NVARCHAR(255), 
+	address TEXT,
+	worked_for nvarchar(50),
+    EmployeePassword NVARCHAR(256)
+);
+
+CREATE TABLE Admin (
+    AdminID Varchar(50) PRIMARY KEY,
+    Position VARCHAR(50),
+	FullName VARCHAR(50),
+    AdminSalary DECIMAL(18, 2),
+	birthdate nvarchar(15),
+	hire_date nvarchar(15),
+	phone_number NVARCHAR(15), 
+	email NVARCHAR(255), 
+	address TEXT,
+	worked_for nvarchar(50),
+    AdminPassword NVARCHAR(256)
+);
+
+CREATE TABLE AttendanceAdmin (
+    AttendanceID NVarchar(50) PRIMARY KEY,
+    AdminID Varchar(50),
+	Date date,
+    TimeIN TIME,
+    TimeOut TIME,
+	TotalTime time,
+    FOREIGN KEY (AdminID) REFERENCES Admin(AdminID)
+);
+
+CREATE TABLE AttendanceEmployee (
+    EmployeeID Varchar(50)PRIMARY KEY,
+    AdminID Varchar(50),
+	Date date,
+    TimeIN TIME,
+    TimeOut TIME,
+	TotalTime Time,
+    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID),
+);
+
+
+Insert into Employee (EmployeeId, Position, FullName, EmployeeSalary, EmployeePassword, phone_number, email, birthdate,  address, hire_date, worked_for) 
+VALUES ('E01', 'Developer', 'Franz Deloritos', 50000, 'Deloritos', '09154375321',  'Deloritos@gmail.com', '2004-02-29','Angono', '2022-01-01', '2 year/s');
+Insert into Employee (EmployeeId, Position, FullName, EmployeeSalary, EmployeePassword, phone_number, email, birthdate, address, hire_date, worked_for) 
+Values ('E02', 'Developer', 'Karl Fabon', 50000, 'FABON', '09165975321', 'Fabon@gmail.com', '2003-10-24', 'Antipolo', '2023-02-02', '1 year/s');
+
+Insert into Admin (AdminID, Position, FullName, AdminSalary, AdminPassword, phone_number, email, birthdate,  address, hire_date, worked_for)
+VALUES ('1', 'CEO', 'EJ Sullera', 50000, 'Sullera1', '09165975321','Sullera@gmail.com', '2002-02-08', 'Antipolo', '2019-01-01', '5 year/s');
+
+
+CREATE PROCEDURE AddAdmin
+	@FullName VARCHAR(50),
+    @Position VARCHAR(50),
+    @Salary DECIMAL(18, 2),
+    @Password VARCHAR(50)
+AS
+BEGIN
+
+    DECLARE @HashedPassword NVARCHAR(256);
+
+    SET @HashedPassword = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @Password)), 2);
+
+    INSERT INTO Admin (FullName, Position, AdminSalary, AdminPassword)
+    VALUES (@FullName, @Position, @Salary, @HashedPassword);
+
+    SELECT SCOPE_IDENTITY() AS AdminID;
+END;
+
+CREATE PROCEDURE AddEmployee
+    @FullName VARCHAR(50),
+    @Position VARCHAR(50),
+    @Salary DECIMAL(18, 2),
+    @Password VARCHAR(50)
+AS
+BEGIN
+    DECLARE @HashedPassword NVARCHAR(256);
+
+    SET @HashedPassword = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @Password)), 2);
+
+    INSERT INTO Employee (FullName, Position, EmployeeSalary, EmployeePassword)
+    VALUES (@FullName, @Position, @Salary, @HashedPassword);
+
+    SELECT SCOPE_IDENTITY() AS EmployeeID;
+END;
+
+CREATE PROCEDURE AddEmployeeLogin
+    @EmployeeID INT,
+    @Password VARCHAR(50)
+AS
+BEGIN
+    DECLARE @StoredPassword NVARCHAR(256);
+    DECLARE @HashedPassword NVARCHAR(256);
+
+    SELECT @StoredPassword = EmployeePassword
+    FROM Employee
+    WHERE EmployeeID = @EmployeeID;
+
+    SET @HashedPassword = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @Password)), 2);
+
+    IF @HashedPassword = @StoredPassword
+    BEGIN
+
+        PRINT 'Login successful.';
+    END
+    ELSE
+    BEGIN
+
+        PRINT 'Invalid password.';
+    END
+END;
+
+
+CREATE PROCEDURE VerifyAdminLogin
+    @AdminID INT,
+    @Password VARCHAR(50)
+AS
+BEGIN
+    DECLARE @StoredPassword NVARCHAR(256);
+    DECLARE @HashedPassword NVARCHAR(256);
+
+    SELECT @StoredPassword = AdminPassword
+    FROM Admin
+    WHERE AdminID = @AdminID;
+
+    SET @HashedPassword = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @Password)), 2);
+
+    IF @HashedPassword = @StoredPassword
+    BEGIN
+        PRINT 'Login successful.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Invalid password.';
+    END
+END;
+
+
+CREATE PROCEDURE EmployeePayroll
+    @EmployeeID VARCHAR(50),
+    @AdminID VARCHAR(50)
+AS
+BEGIN
+    DECLARE @EmployeeSalary DECIMAL(18, 2);
+    DECLARE @GrossPay DECIMAL(18, 2);
+    DECLARE @HourlyRate DECIMAL(18, 2);
+    DECLARE @TotalHoursWorked INT;
+    DECLARE @ExpectedHours INT = 176;
+    DECLARE @SSSDeduction DECIMAL(18, 2);
+    DECLARE @PhilHealthDeduction DECIMAL(18, 2);
+    DECLARE @PagIbigDeduction DECIMAL(18, 2);
+    DECLARE @TotalDeduction DECIMAL(18, 2);
+    DECLARE @NetPay DECIMAL(18, 2);
+    DECLARE @PayPeriod VARCHAR(7);
+
+    SELECT @EmployeeSalary = EmployeeSalary
+    FROM Employee
+    WHERE EmployeeID = @EmployeeID;
+
+    SET @HourlyRate = @EmployeeSalary / @ExpectedHours;
+
+    SELECT @TotalHoursWorked = SUM(DATEDIFF(MINUTE, TimeIN, TimeOut)) / 60
+    FROM AttendanceEmployee
+    WHERE EmployeeID = @EmployeeID
+      AND FORMAT(Date, 'yyyy-MM') = FORMAT(GETDATE(), 'yyyy-MM');
+
+    SET @GrossPay = @TotalHoursWorked * @HourlyRate;
+
+    SET @SSSDeduction = @GrossPay * 0.045;
+    SET @PhilHealthDeduction = @GrossPay * 0.015;
+    SET @PagIbigDeduction = @GrossPay * 0.004;
+
+    SET @TotalDeduction = @SSSDeduction + @PhilHealthDeduction + @PagIbigDeduction;
+
+    SET @NetPay = @GrossPay - @TotalDeduction;
+
+    SET @PayPeriod = FORMAT(GETDATE(), 'yyyy-MM');
+
+    SELECT @TotalHoursWorked AS TotalHoursWorked,
+           @GrossPay AS GrossPay,
+           @SSSDeduction AS SSSDeduction,
+           @PhilHealthDeduction AS PhilHealthDeduction,
+           @PagIbigDeduction AS PagIbigDeduction,
+           @TotalDeduction AS TotalDeduction,
+           @NetPay AS NetPay;
+END;
+
+CREATE PROCEDURE AdminPayroll
+    @AdminID VARCHAR(50)
+AS
+BEGIN
+    DECLARE @AdminSalary DECIMAL(18, 2);
+    DECLARE @GrossPay DECIMAL(18, 2);
+    DECLARE @HourlyRate DECIMAL(18, 2);
+    DECLARE @TotalHoursWorked INT;
+    DECLARE @ExpectedHours INT = 176;
+    DECLARE @SSSDeduction DECIMAL(18, 2);
+    DECLARE @PhilHealthDeduction DECIMAL(18, 2);
+    DECLARE @PagIbigDeduction DECIMAL(18, 2);
+    DECLARE @TotalDeduction DECIMAL(18, 2);
+    DECLARE @NetPay DECIMAL(18, 2);
+    DECLARE @PayPeriod VARCHAR(7);
+
+    SELECT @AdminSalary = AdminSalary
+    FROM Admin
+    WHERE AdminID = @AdminID;
+
+    SET @HourlyRate = @AdminSalary / @ExpectedHours;
+
+    SELECT @TotalHoursWorked = SUM(DATEDIFF(MINUTE, TimeIN, TimeOut)) / 60
+    FROM AttendanceAdmin
+    WHERE AdminID = @AdminID
+      AND FORMAT(Date, 'yyyy-MM') = FORMAT(GETDATE(), 'yyyy-MM');
+
+    SET @GrossPay = @TotalHoursWorked * @HourlyRate;
+
+    SET @SSSDeduction = @GrossPay * 0.045;
+    SET @PhilHealthDeduction = @GrossPay * 0.015;
+    SET @PagIbigDeduction = @GrossPay * 0.004;
+
+    SET @TotalDeduction = @SSSDeduction + @PhilHealthDeduction + @PagIbigDeduction;
+
+    SET @NetPay = @GrossPay - @TotalDeduction;
+
+    SET @PayPeriod = FORMAT(GETDATE(), 'yyyy-MM');
+
+    SELECT @TotalHoursWorked AS TotalHoursWorked,
+           @GrossPay AS GrossPay,
+           @SSSDeduction AS SSSDeduction,
+           @PhilHealthDeduction AS PhilHealthDeduction,
+           @PagIbigDeduction AS PagIbigDeduction,
+           @TotalDeduction AS TotalDeduction,
+           @NetPay AS NetPay;
+END;
+
