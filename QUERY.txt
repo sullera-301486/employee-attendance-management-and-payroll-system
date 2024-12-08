@@ -2,30 +2,30 @@ use dbEmployee;
 
 CREATE TABLE Employee (
     EmployeeID Varchar(50) PRIMARY KEY,
+    EmployeePassword NVARCHAR(256),
     Position VARCHAR(50),
-	FullName VARCHAR(50),
+    FullName VARCHAR(50),
     EmployeeSalary DECIMAL(18, 2),
-	birthdate nvarchar(15),
-	hire_date nvarchar(15),
-	phone_number NVARCHAR(15), 
-	email NVARCHAR(255), 
-	address TEXT,
-	worked_for nvarchar(50),
-    EmployeePassword NVARCHAR(256)
+    birthdate nvarchar(15),
+    hire_date nvarchar(15),
+    phone_number NVARCHAR(15), 
+    email NVARCHAR(255), 
+    address TEXT,
+    worked_for nvarchar(50)
 );
 
 CREATE TABLE Admin (
     AdminID Varchar(50) PRIMARY KEY,
+    AdminPassword NVARCHAR(256),
     Position VARCHAR(50),
-	FullName VARCHAR(50),
+    FullName VARCHAR(50),
     AdminSalary DECIMAL(18, 2),
-	birthdate nvarchar(15),
-	hire_date nvarchar(15),
-	phone_number NVARCHAR(15), 
-	email NVARCHAR(255), 
-	address TEXT,
-	worked_for nvarchar(50),
-    AdminPassword NVARCHAR(256)
+    birthdate nvarchar(15),
+    hire_date nvarchar(15),
+    phone_number NVARCHAR(15), 
+    email NVARCHAR(255), 
+    address TEXT,
+    worked_for nvarchar(50)  
 );
 
 CREATE TABLE AttendanceAdmin (
@@ -41,10 +41,10 @@ CREATE TABLE AttendanceAdmin (
 CREATE TABLE AttendanceEmployee (
     EmployeeID Varchar(50)PRIMARY KEY,
     AdminID Varchar(50),
-	Date date,
+    Date date,
     TimeIN TIME,
     TimeOut TIME,
-	TotalTime Time,
+    TotalTime Time,
     FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID),
 );
 
