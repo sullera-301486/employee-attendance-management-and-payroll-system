@@ -5,12 +5,12 @@ CREATE TABLE Employee (
     Position VARCHAR(50),
     FullName VARCHAR(50),
     EmployeeSalary DECIMAL(18, 2),
-    Birthdate NVARCHAR(15),
-    Hire_Date NVARCHAR(15),
-    Phone_Number NVARCHAR(15), 
-    Email NVARCHAR(255), 
+    Birthdate DATE,
+    Hire_Date DATE,
+    Phone_Number VARCHAR(15), 
+    Email VARCHAR(255), 
     Address TEXT,
-    Worked_For NVARCHAR(50),
+    Worked_For VARCHAR(50),
     EmployeePassword NVARCHAR(256)
 );
 
@@ -19,12 +19,12 @@ CREATE TABLE Admin (
     Position VARCHAR(50),
     FullName VARCHAR(50),
     AdminSalary DECIMAL(18, 2),
-    Birthdate NVARCHAR(15),
-    Hire_Date NVARCHAR(15),
-    Phone_Number NVARCHAR(15), 
-    Email NVARCHAR(255), 
+    Birthdate DATE,
+    Hire_Date DATE,
+    Phone_Number VARCHAR(15), 
+    Email VARCHAR(255), 
     Address TEXT,
-    Worked_For NVARCHAR(50),
+    Worked_For VARCHAR(50),
     AdminPassword NVARCHAR(256)
 );
 
@@ -34,6 +34,7 @@ CREATE TABLE AttendanceEmployee (
     Date DATE,
     TimeIN TIME,
     TimeOut TIME,
+    TotalTime DECIMAL(18, 2),
     FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
 );
 
@@ -43,6 +44,7 @@ CREATE TABLE AttendanceAdmin (
     Date DATE,
     TimeIN TIME,
     TimeOut TIME,
+    TotalTime DECIMAL(18, 2),
     FOREIGN KEY (AdminID) REFERENCES Admin(AdminID)
 );
 
@@ -77,15 +79,13 @@ INSERT INTO Admin (AdminID, Position, FullName, AdminSalary, AdminPassword, Phon
 
 ---------------------------------------------------FULLNAME----------------------------------------------------------------
 CREATE PROCEDURE AddAdmin
-	@FullName VARCHAR(50),
+    @FullName VARCHAR(50),
     @Position VARCHAR(50),
     @Salary DECIMAL(18, 2),
     @Password VARCHAR(50)
 AS
 BEGIN
-
     DECLARE @HashedPassword NVARCHAR(256);
-
     SET @HashedPassword = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @Password)), 2);
 
     INSERT INTO Admin (FullName, Position, AdminSalary, AdminPassword)
@@ -102,7 +102,6 @@ CREATE PROCEDURE AddEmployee
 AS
 BEGIN
     DECLARE @HashedPassword NVARCHAR(256);
-
     SET @HashedPassword = CONVERT(NVARCHAR(256), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @Password)), 2);
 
     INSERT INTO Employee (FullName, Position, EmployeeSalary, EmployeePassword)
@@ -110,6 +109,7 @@ BEGIN
 
     SELECT SCOPE_IDENTITY() AS EmployeeID;
 END;
+
 ----------------------------------------------------LOGIN----------------------------------------------------------------------
 CREATE PROCEDURE AddEmployeeLogin
     @EmployeeID INT,
@@ -127,12 +127,10 @@ BEGIN
 
     IF @HashedPassword = @StoredPassword
     BEGIN
-
         PRINT 'Login successful.';
     END
     ELSE
     BEGIN
-
         PRINT 'Invalid password.';
     END
 END;
@@ -160,7 +158,7 @@ BEGIN
         PRINT 'Invalid password.';
     END
 END;
-----------------------------------------------------EMPLOYEEATTENDACE AND PAYROLL----------------------------------------------------
+----------------------------------------------------ATTENDACE AND PAYROLL----------------------------------------------------
 CREATE PROCEDURE EmployeePayroll
     @EmployeeID VARCHAR(50)
 AS
@@ -223,7 +221,6 @@ BEGIN
            @TotalDeduction AS TotalDeduction,
            @NetPay AS NetPay;
 END;
-----------------------------------------------------Admin ATTENDACE AND PAYROLL----------------------------------------------------
 
 CREATE PROCEDURE AdminPayroll
     @AdminID VARCHAR(50)
@@ -287,7 +284,3 @@ BEGIN
            @TotalDeduction AS TotalDeduction,
            @NetPay AS NetPay;
 END;
-
-
-
-
