@@ -1,0 +1,172 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace TimeTrackPay
+{
+    public partial class leaveRequest : Form
+    {
+        private int employeeID; // Assuming employeeID is passed to the form
+        string connectionString = "Server=DESKTOP-JMR591K\\SQLEXPRESS;Database=dbEmployee;Integrated Security=True;";
+        private SqlConnection Con;
+
+        public leaveRequest(int id)
+        {
+            InitializeComponent();
+            employeeID = id;
+            Con = new SqlConnection(connectionString);
+        }
+
+        private void btnRequest_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(startDate.Text) || string.IsNullOrEmpty(endDate.Text) || string.IsNullOrEmpty(cbLeaveType.Text))
+            {
+                MessageBox.Show("Please select a date and leave type.");
+                return;
+            }
+
+            try
+            {
+                using (SqlConnection Con = new SqlConnection(connectionString))
+                {
+                    Con.Open();
+                    string query = "INSERT INTO LeaveRequests (EmployeeID, LeaveType, StartDate, EndDate, Status) VALUES (@EmployeeID, @LeaveType, @StartDate, @EndDate, @Status)";
+
+                    using (SqlCommand command = new SqlCommand(query, Con))
+                    {
+                        command.Parameters.AddWithValue("@EmployeeID", employeeID);
+                        command.Parameters.AddWithValue("@LeaveType", cbLeaveType.Text);
+                        command.Parameters.AddWithValue("@StartDate", startDate.Value);
+                        command.Parameters.AddWithValue("@EndDate", endDate.Value);
+                        command.Parameters.AddWithValue("@Status", "Pending");
+
+                        command.ExecuteNonQuery();
+                    }
+
+                    MessageBox.Show("Leave request submitted successfully.");
+                    requestSubmitted reqSubmitted = new requestSubmitted();
+                    reqSubmitted.Show();
+                    this.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("An error occurred while submitting the leave request: " + ex.Message);
+            }
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void LeaveRequest_Load(object sender, EventArgs e)
+        {
+            string[] leaveType = { "Vacation Leave", "Sick Leave", "Maternal Leave", "Bereavement Leave" };
+            foreach (string type in leaveType)
+            {
+                cbLeaveType.Items.Add(type);
+            }
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void startDate_ValueChanged(object sender, EventArgs e)
+        {
+        }
+    }
+}
+---pag may error-- sa attendanceform
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace TimeTrackPay
+{
+    public partial class AttendanceForm : Form
+    {
+        private int employeeID;
+        string connectionString = "Server=DESKTOP-JMR591K\\SQLEXPRESS;Database=dbEmployee;Integrated Security=True;";
+        private SqlConnection Con;
+
+        public AttendanceForm(int id)
+        {
+            InitializeComponent();
+            employeeID = id;
+            Con = new SqlConnection(connectionString);
+        }
+
+        private void AttendanceForm_Load(object sender, EventArgs e)
+        {
+            LoadAttendanceData();
+        }
+
+        private void LoadAttendanceData()
+        {
+            string query = "SELECT AttendanceID, EmployeeID, Date, TimeIN, TimeOut, TotalHours, TotalDays FROM dbo.AttendanceEmployee WHERE EmployeeID = @EmployeeID";
+
+            using (SqlCommand command = new SqlCommand(query, Con))
+            {
+                command.Parameters.AddWithValue("@EmployeeID", employeeID);
+
+                try
+                {
+                    Con.Open();
+                    SqlDataAdapter da = new SqlDataAdapter(command);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+
+                    // Bind the DataTable to the DataGridView, assuming your DataGridView is named dataGridView1
+                    dataGridView1.DataSource = dt;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("An error occurred: " + ex.Message);
+                }
+                finally
+                {
+                    Con.Close();
+                }
+            }
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+            leaveRequest leaveRequest = new leaveRequest(employeeID); // Pass employeeID to leaveRequest form
+            leaveRequest.Show();
+        }
+
+        private void btnRequestLeave_Paint(object sender, PaintEventArgs e)
+        {
+        }
+
+        private void btnRequestLeave_MouseClick(object sender, MouseEventArgs e)
+        {
+            leaveRequest leaveRequest = new leaveRequest(employeeID); // Pass employeeID to leaveRequest form
+            leaveRequest.Show();
+        }
+
+        private void label8_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void dataGridView1_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
+        {
+        }
+    }
+}
