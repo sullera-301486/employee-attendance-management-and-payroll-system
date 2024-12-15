@@ -1,0 +1,47 @@
+        private void label20_Click(object sender, EventArgs e)
+        {
+            string connectionString = "Server=DESKTOP-JMR591K\\SQLEXPRESS;Database=dbEmployee;Integrated Security=True;";
+            string deleteLeaveRequests = "DELETE FROM LeaveRequests WHERE EmployeeID = @EmployeeID";
+            string deleteAttendance = "DELETE FROM AttendanceEmployee WHERE EmployeeID = @EmployeeID";
+            string deletePayroll = "DELETE FROM Payroll WHERE EmployeeID = @EmployeeID";
+            string deleteEmployee = "DELETE FROM Employee WHERE EmployeeID = @EmployeeID";
+
+            using (SqlConnection con = new SqlConnection(connectionString))
+            {
+                SqlCommand commandLeaveRequests = new SqlCommand(deleteLeaveRequests, con);
+                SqlCommand commandAttendance = new SqlCommand(deleteAttendance, con);
+                SqlCommand commandPayroll = new SqlCommand(deletePayroll, con);
+                SqlCommand commandEmployee = new SqlCommand(deleteEmployee, con);
+
+                commandLeaveRequests.Parameters.AddWithValue("@EmployeeID", employeeId);
+                commandAttendance.Parameters.AddWithValue("@EmployeeID", employeeId);
+                commandPayroll.Parameters.AddWithValue("@EmployeeID", employeeId);
+                commandEmployee.Parameters.AddWithValue("@EmployeeID", employeeId);
+
+                try
+                {
+                    con.Open();
+                    SqlTransaction transaction = con.BeginTransaction();
+
+                    commandLeaveRequests.Transaction = transaction;
+                    commandAttendance.Transaction = transaction;
+                    commandPayroll.Transaction = transaction;
+                    commandEmployee.Transaction = transaction;
+
+                    commandLeaveRequests.ExecuteNonQuery();
+                    commandAttendance.ExecuteNonQuery();
+                    commandPayroll.ExecuteNonQuery();
+                    commandEmployee.ExecuteNonQuery();
+
+                    transaction.Commit();
+
+                    MessageBox.Show("Employee and related records removed successfully."); // Success message
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("An error occurred while deleting records: " + ex.Message);
+                }
+            }
+
+            Close();
+        }
