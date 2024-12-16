@@ -1,0 +1,146 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace TimeTrackPay
+{
+    public partial class EmployeeDetailsForm : Form
+    {
+        private string employeeId;
+
+        public EmployeeDetailsForm(string employeeId)
+        {
+            InitializeComponent();
+            this.employeeId = employeeId;
+            LoadEmployeeDetails();
+        }
+
+        private void LoadEmployeeDetails()
+        {
+            string connectionString = "Server=DESKTOP-JMR591K\\SQLEXPRESS;Database=dbEmployee;Integrated Security=True;";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+
+                    // Query to fetch employee data
+                    string query = "SELECT EmployeeID, FullName, position, email, phone_number, address, birthdate, hire_date, worked_for FROM Employee WHERE EmployeeID = @EmployeeID";
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@EmployeeID", employeeId);
+
+                    SqlDataReader reader = command.ExecuteReader();
+
+                    if (reader.Read())
+                    {
+                        DateTime dateWork = reader["hire_date"] != DBNull.Value ? Convert.ToDateTime(reader["hire_date"]) : DateTime.MinValue;
+                        DateTime dateBirth = reader["birthdate"] != DBNull.Value ? Convert.ToDateTime(reader["birthdate"]) : DateTime.MinValue;
+                        // Display fetched data in the labels
+                        NameEmployee.Text = reader["FullName"].ToString();
+                        PhoneNumber.Text = reader["phone_number"].ToString();
+                        EmployeeBday.Text = $"{dateBirth:MM/dd/yyyy}";
+                        HireDateEmployee.Text = $"{dateWork:MM/dd/yyyy}";
+                        EmployeeAddress.Text = reader["address"].ToString();
+                        EmployeeEmail.Text = reader["email"].ToString();
+                        EmployeePosition.Text = reader["position"].ToString();
+                        IDemployee.Text = reader["EmployeeID"].ToString();
+                        WorkedForEmployee.Text = reader["worked_for"].ToString();
+                    }
+
+                    reader.Close();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error: {ex.Message}");
+                }
+            }
+        }
+
+        private void EmployeeDetailsForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void fabonPanel4_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void fabonPanel2_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void WorkedForEmployee_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label19_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void fabonPanel15_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void label20_Click(object sender, EventArgs e)
+        {
+            string connectionString = "Server=DESKTOP-JMR591K\\SQLEXPRESS;Database=dbEmployee;Integrated Security=True;";
+            string deleteLeaveRequests = "DELETE FROM LeaveRequests WHERE EmployeeID = @EmployeeID";
+            string deleteAttendance = "DELETE FROM AttendanceEmployee WHERE EmployeeID = @EmployeeID";
+            string deletePayroll = "DELETE FROM Payroll WHERE EmployeeID = @EmployeeID";
+            string deleteEmployee = "DELETE FROM Employee WHERE EmployeeID = @EmployeeID";
+
+            using (SqlConnection con = new SqlConnection(connectionString))
+            {
+                SqlCommand commandLeaveRequests = new SqlCommand(deleteLeaveRequests, con);
+                SqlCommand commandAttendance = new SqlCommand(deleteAttendance, con);
+                SqlCommand commandPayroll = new SqlCommand(deletePayroll, con);
+                SqlCommand commandEmployee = new SqlCommand(deleteEmployee, con);
+
+                commandLeaveRequests.Parameters.AddWithValue("@EmployeeID", employeeId);
+                commandAttendance.Parameters.AddWithValue("@EmployeeID", employeeId);
+                commandPayroll.Parameters.AddWithValue("@EmployeeID", employeeId);
+                commandEmployee.Parameters.AddWithValue("@EmployeeID", employeeId);
+
+                try
+                {
+                    con.Open();
+                    SqlTransaction transaction = con.BeginTransaction();
+
+                    commandLeaveRequests.Transaction = transaction;
+                    commandAttendance.Transaction = transaction;
+                    commandPayroll.Transaction = transaction;
+                    commandEmployee.Transaction = transaction;
+
+                    commandLeaveRequests.ExecuteNonQuery();
+                    commandAttendance.ExecuteNonQuery();
+                    commandPayroll.ExecuteNonQuery();
+                    commandEmployee.ExecuteNonQuery();
+
+                    transaction.Commit();
+
+                    MessageBox.Show("Employee and related records removed successfully."); // Success message
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("An error occurred while deleting records: " + ex.Message);
+                }
+            }
+
+            Close();
+        }
+    }
+}
